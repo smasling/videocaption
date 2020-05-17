@@ -17,8 +17,32 @@ def conv_video_to_frames(s):
         ret, buf[fff] = cap.read()
         fff += 1
     cap.release()
-    print(buf.shape)
-    print(buf[0])
+
+
+
+def create_train_videos():
+    vids = [f[:-4] for f in listdir('testFolder')]
+    ret = {}
+    for v in vids:
+        file = "testFolder/" + v + ".mp4"
+        ret[v] = conv_video_to_frames(file)
+    max = -1
+    for i in ret:
+        if ret[i].shape[0] > max:
+            max = ret[i].shape[0]
+    train = np.zeros((len(vids), max, 240, 320, 3))
+    count = 0
+    for i in ret:
+        curr = np.pad(ret[i], ((max - ret[i].shape[0]), (0,0), (0,0), (0,0)))
+        train[count] += curr
+        count += 1
+    return train
+
+
+
+
+
+
 
 
 conv_video_to_frames('testFolder/video13.mp4')
