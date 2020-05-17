@@ -1,5 +1,27 @@
 import json
 from os import listdir
+import cv2
+import numpy as np
+
+
+def conv_video_to_frames(s):
+    cap = cv2.VideoCapture(s)
+    frameCount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    frameWidth = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    frameHeight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    print(frameCount, frameHeight, frameWidth )
+    buf = np.empty((frameCount, frameHeight, frameWidth, 3), np.dtype('uint8'))
+    fff = 0
+    ret = True
+    while (fff < frameCount and ret):
+        ret, buf[fff] = cap.read()
+        fff += 1
+    cap.release()
+    print(buf.shape)
+    print(buf[0])
+
+
+conv_video_to_frames('testFolder/video13.mp4')
 
 
 def load_video_annotations(s):
@@ -22,3 +44,6 @@ def create_mini_split():
             if sentence['video_id'] == v:
                 mini_train[v]['sentences'].append(sentence)
     return mini_train
+
+# videodata = skvideo.io.vread("testFolder/video12.mp4")
+# print(videodata.shape)
