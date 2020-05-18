@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 
 
-def conv_video_to_frames(s):
+def conv_video_to_frames(s, train, count):
     cap = cv2.VideoCapture(s)
     frameCount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     frameWidth = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -17,35 +17,30 @@ def conv_video_to_frames(s):
         ret, buf[fff] = cap.read()
         fff += 1
     cap.release()
+    curr = np.pad(buf, (0, (900 - buf.shape[0]), (0,0), (0,0), (0,0)))
+    del buf
+    del curr
+    train[count] += curr
 
 
 
 def create_train_videos():
     vids = [f[:-4] for f in listdir('testFolder')]
-    ret = {}
+    train = np.zeros((len(vids), 900, 240, 320, 3))
+    count = 0
     for v in vids:
         file = "testFolder/" + v + ".mp4"
-        ret[v] = conv_video_to_frames(file)
-    max = -1
-    for i in ret:
-        if ret[i].shape[0] > max:
-            max = ret[i].shape[0]
-    train = np.zeros((len(vids), max, 240, 320, 3))
-    count = 0
-    for i in ret:
-        curr = np.pad(ret[i], ((max - ret[i].shape[0]), (0,0), (0,0), (0,0)))
-        train[count] += curr
+        ret[v] = conv_video_to_frames(file, train, count)
         count += 1
-    return train
+
+    np.save('train', train)
 
 
 
 
 
 
-
-
-conv_video_to_frames('testFolder/video13.mp4')
+create_train_videos()
 
 
 def load_video_annotations(s):
