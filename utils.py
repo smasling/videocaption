@@ -30,7 +30,7 @@ def conv_video_to_frames(s, train, count):
 
 def create_train_videos():
     vids = [f[:-4] for f in listdir('testFolder')]
-    vids = vids[:100]
+    vids = vids[:10]
     train = np.zeros((len(vids), 91, 240, 320, 3), dtype=np.uint8)
     count = 0
     for v in vids:
@@ -38,7 +38,7 @@ def create_train_videos():
         conv_video_to_frames(file, train, count)
         count += 1
 
-    np.savez_compressed('train', a=train, b=np.array(vids))
+    np.savez_compressed('train_mini', a=train, b=np.array(vids))
 
 
 
