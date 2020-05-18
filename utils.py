@@ -39,13 +39,8 @@ def create_train_videos():
         count += 1
 
     np.savez_compressed('train_mini', a=train, b=np.array(vids))
-
-
-
-
-
-
-create_train_videos()
+    
+# create_train_videos()
 
 
 def load_video_annotations(s):
