@@ -10,7 +10,7 @@ def conv_video_to_frames(s, train, count):
     frameWidth = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frameHeight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     print(frameCount, frameHeight, frameWidth )
-    buf = np.empty((frameCount, frameHeight, frameWidth, 3), np.dtype('uint8'))
+    buf = np.empty((int(frameCount/8), frameHeight, frameWidth, 3), np.dtype('uint8'))
     fff = 0
     ret = True
     while (fff < frameCount and ret):
@@ -22,13 +22,14 @@ def conv_video_to_frames(s, train, count):
     curr = np.pad(buf, (0, (113 - buf.shape[0]), (0,0), (0,0), (0,0)))
     del buf
     del curr
+    print(count)
     train[count] += curr
 
 
 
 def create_train_videos():
     vids = [f[:-4] for f in listdir('testFolder')]
-    train = np.zeros((len(vids), 113, 240, 320, 3))
+    train = np.zeros((len(vids), 113, 240, 320, 3), dtype=np.uint8)
     count = 0
     for v in vids:
         file = "testFolder/" + v + ".mp4"
