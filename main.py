@@ -81,12 +81,14 @@ class Encoder(nn.Module):
     # resnet = models.resnet101(pretrained=True)
     resnet = models.video.r3d_18(pretrained=True)
     self.resnet = nn.Sequential(*list(resnet.children())[:-2])
-    self.adaptive_pool = nn.AdaptiveAvgPool2d((14, 14))
+    self.adaptive_pool = nn.AdaptiveAvgPool3d((6,8, 8))
 
   def forward(self, images):
-    out = self.adaptive_pool(self.resnet(images.permute(0, 4, 1, 2, 3)))
+    out1 = self.resnet(images.permute(0, 4, 1, 2, 3))
+    print(out1.shape)
+    out = self.adaptive_pool(out1)
+    print(out.shape)
     # batch_size, img size, imgs size, 2048
-    out = out.permute(0, 2, 3, 1)
     # out = out.permute(0, )
 
     return out
@@ -98,7 +100,7 @@ class Decoder(nn.Module):
 
   def __init__(self, vocab_size, use_glove, use_bert):
     super(Decoder, self).__init__()
-    self.encoder_dim = 2048
+    self.encoder_dim = 8
     self.attention_dim = 512
     self.use_bert = use_bert
 
@@ -114,7 +116,7 @@ class Decoder(nn.Module):
     self.dropout = 0.5
 
     # soft attention
-    self.enc_att = nn.Linear(2048, 512)
+    self.enc_att = nn.Linear(8, 512)
     self.dec_att = nn.Linear(512, 512)
     self.att = nn.Linear(512, 1)
     self.relu = nn.ReLU()
@@ -146,6 +148,7 @@ class Decoder(nn.Module):
         p.requires_grad = True
 
   def forward(self, encoder_out, encoded_captions, caption_lengths):
+    print(encoder_out.shape, "input to decode shape")
     batch_size = encoder_out.size(0)
     encoder_dim = encoder_out.size(-1)
     vocab_size = self.vocab_size
@@ -329,10 +332,10 @@ def train():
       caps = caps.to(device)
 
       scores, caps_sorted, decode_lengths, alphas = decoder(imgs, caps, caplens)
-      scores = pack_padded_sequence(scores, decode_lengths, batch_first=True)[0]
+      scores = pack_padded_sequence(scores, decode_lengths, batch_first=True, enforce_sorted = False)[0]
 
       targets = caps_sorted[:, 1:]
-      targets = pack_padded_sequence(targets, decode_lengths, batch_first=True)[0]
+      targets = pack_padded_sequence(targets, decode_lengths, batch_first=True, enforce_sorted = False)[0]
 
       loss = criterion(scores, targets).to(device)
 
