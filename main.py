@@ -28,8 +28,8 @@ from pytorch_pretrained_bert import BertTokenizer, BertModel
 
 # hyperparams
 grad_clip = 5.
-num_epochs = 4
-batch_size = 2
+num_epochs = 3
+batch_size = 1
 decoder_lr = 0.0004
 
 # if both are false them model = baseline
@@ -37,9 +37,9 @@ decoder_lr = 0.0004
 glove_model = False
 bert_model = False
 
-from_checkpoint = False
-train_model = True
-valid_model = False
+from_checkpoint = True
+train_model = False
+valid_model = True
 
 ###################
 # END Parameters
@@ -85,9 +85,9 @@ class Encoder(nn.Module):
 
   def forward(self, images):
     out1 = self.resnet(images.permute(0, 4, 1, 2, 3))
-    print(out1.shape)
+    # print(out1.shape)
     out = self.adaptive_pool(out1)
-    print(out.shape)
+    # print(out.shape)
     # batch_size, img size, imgs size, 2048
     # out = out.permute(0, )
 
@@ -148,7 +148,7 @@ class Decoder(nn.Module):
         p.requires_grad = True
 
   def forward(self, encoder_out, encoded_captions, caption_lengths):
-    print(encoder_out.shape, "input to decode shape")
+    # print(encoder_out.shape, "input to decode shape")
     batch_size = encoder_out.size(0)
     encoder_dim = encoder_out.size(-1)
     vocab_size = self.vocab_size
@@ -257,11 +257,28 @@ UNK = 3
 # Load vocabulary
 with open('vocab.pkl', 'rb') as f:
   vocab = pickle.load(f)
+# with open('decoder_state.p', 'rb') as f:
+#   ds = pickle.load(f)
+# with open('encoder_state.p', 'rb') as f:
+#   encoder_state = pickle.load(f)
+
+
+# torch.save({
+#   'epoch': ds['epoch'],
+#   'model_state_dict': ds['model_state_dict'],
+#   'optimizer_state_dict': ds['optimizer_state_dict'],
+#   'loss': ds['loss'],
+# }, './decoder_epoch')
+
+# print('worked?')
+
+
+
 print('vocab loaded')
 # load data
 train_loader = get_loader('train', vocab, batch_size)
 print('train loader loaded')
-# val_loader = get_loader('val', vocab, batch_size)
+val_loader = get_loader('val', vocab, batch_size)
 
 #############
 # Init model
@@ -285,8 +302,8 @@ if from_checkpoint:
       decoder_checkpoint = torch.load('./checkpoints/decoder_glove')
     else:
       print('Pre-Trained Baseline Model')
-      encoder_checkpoint = torch.load('./checkpoints/encoder_baseline')
-      decoder_checkpoint = torch.load('./checkpoints/decoder_baseline')
+      encoder_checkpoint = torch.load('./encoder_epoch3')
+      decoder_checkpoint = torch.load('./decoder_epoch3')
   else:
     if bert_model:
       print('Pre-Trained BERT Model')
@@ -340,6 +357,7 @@ def train():
       loss = criterion(scores, targets).to(device)
 
       loss += ((1. - alphas.sum(dim=1)) ** 2).mean()
+      print('LOSS: ', loss)
 
       decoder_optimizer.zero_grad()
       loss.backward()
@@ -369,28 +387,44 @@ def train():
           'model_state_dict': decoder.state_dict(),
           'optimizer_state_dict': decoder_optimizer.state_dict(),
           'loss': loss,
-          }, './checkpoints/decoder_mid')
+          }, './decoder_mid')
 
         torch.save({
           'epoch': epoch,
           'model_state_dict': encoder.state_dict(),
           'loss': loss,
-          }, './checkpoints/encode_mid')
+          }, './encode_mid')
 
         print('model saved')
+
+    # decoder_obj = {'epoch': epoch,
+    #   'model_state_dict': decoder.state_dict(),
+    #   'optimizer_state_dict': decoder_optimizer.state_dict(),
+    #   'loss': loss}
+
+    # encoder_obj = {
+    #   'epoch': epoch,
+    #   'model_state_dict': encoder.state_dict(),
+    #   'loss': loss}
+
+    # pickle.dump(decoder_obj, open( "decoder_state.p", "wb" ))
+    # pickle.dump(encoder_obj, open( "encoder_state.p", "wb" ))
+    # print('here!')
+
+
 
     torch.save({
       'epoch': epoch,
       'model_state_dict': decoder.state_dict(),
       'optimizer_state_dict': decoder_optimizer.state_dict(),
       'loss': loss,
-      }, './checkpoints/decoder_epoch'+str(epoch+1))
+      }, './decoder_epoch'+str(epoch+1))
 
     torch.save({
       'epoch': epoch,
       'model_state_dict': encoder.state_dict(),
       'loss': loss,
-      }, './checkpoints/encoder_epoch'+str(epoch+1))
+      }, './encoder_epoch'+str(epoch+1))
 
     print('epoch checkpoint saved')
 
@@ -479,9 +513,9 @@ def validate():
     scores, caps_sorted, decode_lengths, alphas = decoder(imgs, caps, caplens)
     targets = caps_sorted[:, 1:]
 
-    # Remove timesteps that we didn't decode at, or are pads
-    scores_packed = pack_padded_sequence(scores, decode_lengths, batch_first=True)[0]
-    targets_packed = pack_padded_sequence(targets, decode_lengths, batch_first=True)[0]
+    # Remove timesteps that we  didn't decode at, or are pads
+    scores_packed = pack_padded_sequence(scores, decode_lengths, batch_first=True, enforce_sorted=False)[0]
+    targets_packed = pack_padded_sequence(targets, decode_lengths, batch_first=True, enforce_sorted=False)[0]
 
     # Calculate loss
     loss = criterion(scores_packed, targets_packed)

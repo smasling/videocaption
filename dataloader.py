@@ -33,7 +33,7 @@ class DataLoader(data.Dataset):
     frameHeight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     print('frameWidth', frameWidth)
     print(frameCount, frameHeight, frameWidth )
-    buf = np.empty((int(frameCount/10), frameHeight, frameWidth, 3), np.dtype('uint8'))
+    buf = np.empty((int(frameCount/10) + 1, frameHeight, frameWidth, 3), np.dtype('uint8'))
     fff = 0
     ret = True
     while (fff < frameCount and ret):
@@ -63,7 +63,6 @@ def collate_fn(data):
     f = images[i].shape[0]
     if f > mx:
       mx = f
-  print(mx, "max")
   newImages = torch.zeros(len(images), mx, W, H, C)
   for i, image in enumerate(images):
     newImages[i, :images[i].shape[0]] = image
@@ -93,7 +92,9 @@ def get_loader(method, vocab, batch_size):
   train_json = None
   with open('train_val_videodatainfo.json') as f:
     train_json = json.load(f)
-  datadict = build_dicts(train_json)
+  datadict = build_dicts(train_json,1)
+  if method == 'val':
+    datadict = build_dicts(train_json, None)
 
   data = DataLoader(ids=datadict, vocab=vocab, transform=transform)
 
@@ -112,11 +113,21 @@ Reads in train data npz file and the labels info json
 Generates the following dictionaries:
 - datapoint_id_dict: sen_id -> (sentence, video_id)
 '''
-def build_dicts(train_json):
+def build_dicts(train_json, ids = None):
   # train_data = np.load(train_data_path)['a']
-  train_data_ids = np.load('train_mini.npz')['b']
+  train_data_ids = ['video1700', 'video1210', 'video1115', 'video1990',
+  'video1701', 'video1211', 'video1116', 'video1891',
+  'video1702', 'video1212', 'video1117', 'video1892',
+  'video1703', 'video1213', 'video1118', 'video1893',
+  'video1704', 'video1214', 'video1119', 'video1894',
+  'video1705', 'video1215', 'video1120', 'video1895',
+  'video1706', 'video1216', 'video1121', 'video1896',
+  'video1707', 'video1217', 'video1122', 'video1897']
+  if not ids:
+    train_data_ids = ['video1801', 'video1802', 'video1803', 'video1804', 'video1805']
+  print("LOOK HERE")
+  print(train_data_ids)
   descriptions = train_json['sentences']
-  print(descriptions[0])
   datapoint_id_dict = {}
   i = 0
   for s in descriptions:
