@@ -37,9 +37,9 @@ decoder_lr = 0.0004
 glove_model = False
 bert_model = False
 
-from_checkpoint = True
-train_model = False
-valid_model = True
+from_checkpoint = False
+train_model = True
+valid_model = False
 
 ###################
 # END Parameters
