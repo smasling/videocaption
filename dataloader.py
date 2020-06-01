@@ -31,7 +31,7 @@ class DataLoader(data.Dataset):
     frameCount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     frameWidth = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frameHeight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    print('frameWidth', frameWidth)
+    # print('frameWidth', frameWidth)
     print(frameCount, frameHeight, frameWidth )
     buf = np.empty((int(frameCount/10) + 1, frameHeight, frameWidth, 3), np.dtype('uint8'))
     fff = 0

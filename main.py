@@ -343,7 +343,7 @@ def train():
     num_batches = len(train_loader)
 
     for i, (imgs, caps, caplens) in enumerate(tqdm(train_loader)):
-      print('i')
+      # print('i')
 
       imgs = encoder(imgs.to(device))
       caps = caps.to(device)
@@ -357,7 +357,7 @@ def train():
       loss = criterion(scores, targets).to(device)
 
       loss += ((1. - alphas.sum(dim=1)) ** 2).mean()
-      print('LOSS: ', loss)
+      # print('LOSS: ', loss)
 
       decoder_optimizer.zero_grad()
       loss.backward()
