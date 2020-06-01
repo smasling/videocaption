@@ -29,7 +29,7 @@ from pytorch_pretrained_bert import BertTokenizer, BertModel
 # hyperparams
 grad_clip = 5.
 num_epochs = 3
-batch_size = 1
+batch_size = 16
 decoder_lr = 0.0004
 
 # if both are false them model = baseline
