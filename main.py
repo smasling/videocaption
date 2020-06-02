@@ -29,7 +29,7 @@ from pytorch_pretrained_bert import BertTokenizer, BertModel
 # hyperparams
 grad_clip = 5.
 num_epochs = 3
-batch_size = 16
+batch_size = 6
 decoder_lr = 0.0004
 
 # if both are false them model = baseline
@@ -371,6 +371,9 @@ def train():
       decoder_optimizer.step()
 
       losses.update(loss.item(), sum(decode_lengths))
+      
+      if i % 200 == 0 and i!= 0:
+          print(loss)
 
       # save model each 100 batches
       if i%5000==0 and i!=0:

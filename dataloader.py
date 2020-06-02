@@ -28,7 +28,7 @@ class DataLoader(data.Dataset):
     caption.extend([vocab(token) for token in tokens])
     caption.append(vocab('<end>'))
     target = torch.Tensor(caption)
-    return torch.from_numpy(buf).type(torch.FloatTensor), target
+    return torch.from_numpy(buf[0]).type(torch.FloatTensor), target
 
   def __len__(self):
     return len(self.ids)
@@ -36,15 +36,17 @@ class DataLoader(data.Dataset):
 
 def collate_fn(data):
   images, captions = zip(*data)
-  _, W, H, C = images[0].shape
+  S, _, H, C = images[0].shape
   mx = 0
   for i in range(len(images)):
-    f = images[i].shape[0]
+    f = images[i].shape[1]
     if f > mx:
       mx = f
-  newImages = torch.zeros(len(images), mx, W, H, C)
+  newImages = torch.zeros(len(images), S, mx, H, C)
+  #print(newImages.shape)
   for i, image in enumerate(images):
-    newImages[i, :images[i].shape[0]] = image
+      #print(image.shape)
+      newImages[i, :,  :image.shape[1]] = image
   images = newImages
   lengths = [len(cap) for cap in captions]
   targets = torch.zeros(len(captions), max(lengths)).long()
