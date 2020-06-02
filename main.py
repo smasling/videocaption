@@ -79,14 +79,14 @@ class Encoder(nn.Module):
   def __init__(self):
     super(Encoder, self).__init__()
     # resnet = models.resnet101(pretrained=True)
-    resnet = models.video.r3d_18(pretrained=True)
-    self.resnet = nn.Sequential(*list(resnet.children())[:-2])
-    self.adaptive_pool = nn.AdaptiveAvgPool3d((6,8, 8))
+    # resnet = models.video.r3d_18(pretrained=True)
+    # self.resnet = nn.Sequential(*list(resnet.children())[:-2])
+    self.adaptive_pool = nn.AdaptiveAvgPool3d((6,8, 8)).to(device)
 
   def forward(self, images):
-    out1 = self.resnet(images.permute(0, 4, 1, 2, 3))
+    # out1 = self.resnet(images.permute(0, 4, 1, 2, 3))
     # print(out1.shape)
-    out = self.adaptive_pool(out1)
+    out = self.adaptive_pool(images)
     # print(out.shape)
     # batch_size, img size, imgs size, 2048
     # out = out.permute(0, )
